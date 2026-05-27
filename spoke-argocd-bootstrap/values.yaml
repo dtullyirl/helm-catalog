@@ -1,0 +1,23 @@
+org: acme
+
+clusterType: dev
+clusterGroup: eng-dev
+clusterName: ""
+region: kilkenny
+owner: platform
+
+platformAppsRepoURL: https://github.com/purple-monkey/platform-apps.git
+platformConfigRepoURL: https://github.com/purple-monkey/platform-config.git
+
+platform:
+  version: main
+  argocd:
+    syncPolicy:
+      syncOptions:
+        - Validate=true
+        - CreateNamespace=false
+        - RespectIgnoreDifferences=true
+        - ServerSideApply=true
+
+# Install OpenShift GitOps operator on the spoke before creating the root Application
+installOpenShiftGitOps: true

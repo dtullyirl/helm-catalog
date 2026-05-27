@@ -1,0 +1,40 @@
+{{- $clusterType := .Values.clusterType }}
+{{- $clusterGroup := .Values.clusterGroup }}
+{{- $region := .Values.region }}
+{{- $platformSyncPolicy := (default ((.Values.platform).argocd).syncPolicy false) }}
+{{- $platformVersion := (required "platform.version is required" (.Values.platform).version) }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.org }}-cluster-aoa
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: platform-tools
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: {{ .Values.platformAppsRepoURL }}
+      path: .
+      targetRevision: {{ $platformVersion }}
+      helm:
+        valueFiles:
+          - $platform_values/default.yaml
+          - $platform_values/regions/{{ $region }}/region.yaml
+          - $platform_values/clusters/{{ $clusterType }}/common.yaml
+          - $platform_values/clusters/{{ $clusterType }}/{{ $clusterGroup }}/groupdef.yaml
+          - $platform_values/clusters/{{ $clusterType }}/{{ $clusterGroup }}/{{ $region }}/clusterdef.yaml
+        ignoreMissingValueFiles: true
+    - ref: platform_values
+      repoURL: {{ .Values.platformConfigRepoURL }}
+      targetRevision: {{ $platformVersion }}
+{{- if $platformSyncPolicy }}
+  syncPolicy: {{ $platformSyncPolicy | toYaml | nindent 4 }}
+{{- else }}
+  syncPolicy: {}
+{{- end }}

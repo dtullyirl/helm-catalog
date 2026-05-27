@@ -1,0 +1,5 @@
+apiVersion: v2
+name: spoke-argocd-bootstrap
+description: Spoke bootstrap — installs OpenShift GitOps operator and creates the root app-of-apps Application
+type: application
+version: 1.0.0

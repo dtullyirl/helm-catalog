@@ -1,0 +1,5 @@
+apiVersion: v2
+name: rosa-machine-pool
+description: ROSA day-2 MachinePool (machine.openshift.io/v1beta1)
+type: application
+version: 0.1.0

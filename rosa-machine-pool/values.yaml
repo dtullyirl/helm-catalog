@@ -1,0 +1,9 @@
+rosa:
+  machinePools:
+    platform:
+      enabled: false
+      name: platform
+      replicas: 2
+      clusterID: ""
+      labels:
+        node-role: platform
