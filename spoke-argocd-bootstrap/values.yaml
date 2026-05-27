@@ -6,8 +6,8 @@ clusterName: ""
 region: kilkenny
 owner: platform
 
-platformAppsRepoURL: https://github.com/purple-monkey/platform-apps.git
-platformConfigRepoURL: https://github.com/purple-monkey/platform-config.git
+platformAppsRepoURL: https://github.com/nu-j/platform-apps.git
+platformConfigRepoURL: https://github.com/nu-j/platform-config.git
 
 platform:
   version: main
