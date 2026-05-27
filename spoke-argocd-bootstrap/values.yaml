@@ -1,9 +1,9 @@
 org: acme
 
 clusterType: dev
-clusterGroup: eng-dev
+clusterGroup: eng
 clusterName: ""
-region: kilkenny
+region: eu-west-1
 owner: platform
 
 platformAppsRepoURL: https://github.com/nu-j/platform-apps.git

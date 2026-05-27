@@ -14,7 +14,7 @@ Each subdirectory is a standalone Helm chart. Reference it with `repoURL` pointi
 ```bash
 # Bootstrap chart
 helm template spoke spoke-argocd-bootstrap/ \
-  --set clusterType=dev,clusterGroup=eng-dev,region=kilkenny,platform.version=main
+  --set clusterType=dev,clusterGroup=eng,region=eu-west-1,platform.version=main
 
 # ROSA MachinePool chart
 helm template rosa rosa-machine-pool/ \
