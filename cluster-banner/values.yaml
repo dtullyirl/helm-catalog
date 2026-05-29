@@ -1,0 +1,21 @@
+# Default values — overridden by platform-config layers at deploy time.
+# In practice these values are always provided by the Argo CD multi-source valueFiles chain:
+#   default.yaml → region.yaml → common.yaml → clusterdef.yaml
+
+# Cluster identity — displayed on the banner so operators know at a glance which cluster they're on
+clusterType: dev
+clusterGroup: ""
+clusterName: ""
+
+clusterTheme:
+  banner:
+    # Text colour (white works on all the background colours below)
+    color: "#ffffff"
+    # Background colour — set per environment in platform-config clusters/<type>/common.yaml:
+    #   dev:     #28a745  (green)
+    #   preprod: #fd7e14  (orange)
+    #   prod:    #dc3545  (red)
+    #   hub:     #6f42c1  (purple)
+    backgroundColor: "#28a745"
+    # OCP ConsoleNotification location — BannerTop | BannerBottom | BannerTopBottom
+    location: BannerTop

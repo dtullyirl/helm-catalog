@@ -1,7 +1,7 @@
 org: acme
 
 clusterType: dev
-clusterGroup: eng
+clusterGroup: payments
 clusterName: ""
 region: eu-west-1
 owner: platform
