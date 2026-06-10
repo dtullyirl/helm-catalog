@@ -1,7 +1,8 @@
 {{- /*
   ConsoleNotification — renders a coloured banner at the top of the OCP console.
   Colour and location are driven by clusterTheme.banner in platform-config common.yaml.
-  Text shows the environment tier and cluster group so operators always know where they are.
+  Text defaults to "TYPE | group" (e.g. "DEV | payments") but can be overridden per cluster
+  via clusterTheme.banner.text in the cluster's clusterdef.yaml.
 */ -}}
 apiVersion: console.openshift.io/v1
 kind: ConsoleNotification
@@ -9,8 +10,12 @@ metadata:
   # Single notification per cluster — upgrading re-applies this resource in-place
   name: env-banner
 spec:
-  # e.g. "DEV | payments" or "HUB | eng"
+  {{- if .Values.clusterTheme.banner.text }}
+  text: {{ .Values.clusterTheme.banner.text | quote }}
+  {{- else }}
+  # Default: "DEV | payments" or "HUB | eng"
   text: "{{ .Values.clusterType | upper }} | {{ .Values.clusterGroup }}"
+  {{- end }}
   color: {{ .Values.clusterTheme.banner.color | quote }}
   backgroundColor: {{ .Values.clusterTheme.banner.backgroundColor | quote }}
   location: {{ .Values.clusterTheme.banner.location | default "BannerTop" }}

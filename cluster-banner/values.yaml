@@ -19,3 +19,6 @@ clusterTheme:
     backgroundColor: "#28a745"
     # OCP ConsoleNotification location — BannerTop | BannerBottom | BannerTopBottom
     location: BannerTop
+    # Optional custom text. When empty the banner defaults to "TYPE | group" (e.g. "DEV | payments").
+    # Set in clusterdef.yaml to give a specific cluster a more descriptive label.
+    text: ""
