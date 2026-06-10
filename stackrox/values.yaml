@@ -1,0 +1,54 @@
+# Default values for the stackrox/ACS wrapper chart.
+#
+# These defaults are overridden by the hub cluster's platform-config layers:
+#   default.yaml → regions/<r>/region.yaml → clusters/hub/common.yaml → clusters/hub/eng/clusterdef.yaml
+#
+# The advancedClusterSecurity.values block in hub/common.yaml is merged in via valuesObject
+# in the Argo CD Application template — see platform-apps/templates/hub/advanced-cluster-security-app.yaml.
+#
+# Full values reference:
+#   https://github.com/stackrox/stackrox/tree/master/deploy/helm/stackrox-central
+#
+# IMPORTANT: Before enabling, ensure:
+#   1. The ACS operator is installed (via operator-installer app, rhacs-operator channel)
+#   2. An init bundle has been generated in ACS Central and referenced here or via a Secret
+#   3. The stackrox namespace exists (CreateNamespace: true is set in the Application)
+
+# -- All values are nested under the dependency chart alias (central-services)
+central-services:
+  # -- Central deployment resource limits.
+  #    Override per hub cluster in clusters/hub/<group>/clusterdef.yaml
+  central:
+    resources:
+      limits:
+        cpu: "4"
+        memory: 8Gi
+      requests:
+        cpu: "1"
+        memory: 4Gi
+
+  # -- Scanner deployment (image vulnerability scanning)
+  scanner:
+    disable: false
+    resources:
+      limits:
+        cpu: "2"
+        memory: 4Gi
+      requests:
+        cpu: 500m
+        memory: 2Gi
+
+  # -- Scanner v4 (next-gen scanner — recommended for RHACS 4.x)
+  scannerV4:
+    disable: false
+
+# -- Passed through from hub/common.yaml advancedClusterSecurity.values via valuesObject
+# These top-level keys are mapped to the chart values in the Argo CD Application template.
+stackrox:
+  namespace: stackrox
+  analyzer:
+    resources:
+      limits:
+        cpu: 500m
+      requests:
+        cpu: 100m

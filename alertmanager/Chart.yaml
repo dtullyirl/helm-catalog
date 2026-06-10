@@ -1,0 +1,13 @@
+apiVersion: v2
+name: alertmanager
+description: >
+  Platform wrapper for prometheus-community/alertmanager.
+  Deployed per cluster by the alertmanager-config Argo CD Application.
+  Cluster-specific routing and receivers are layered in via platform-config
+  alertmanager.yaml overlays (ignoreMissingValueFiles: true).
+type: application
+version: 0.1.0
+dependencies:
+  - name: alertmanager
+    version: "0.35.0"
+    repository: https://prometheus-community.github.io/helm-charts

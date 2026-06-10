@@ -8,6 +8,9 @@ Each subdirectory is a standalone Helm chart. Reference it with `repoURL` pointi
 |-------|-------------|----------------|-------------|
 | `spoke-argocd-bootstrap` | Hub ApplicationSet (Argo CD) | Each ROSA spoke | Installs GitOps operator + creates root app-of-apps |
 | `rosa-machine-pool` | Spoke child Application (Argo CD) | Spoke (in-cluster) | Day-2 ROSA MachinePool (2 replicas example) |
+| `cluster-banner` | Spoke/hub child Application (Argo CD) | All clusters | OCP ConsoleNotification banner colour-coded by environment |
+| `alertmanager` | Spoke/hub child Application (Argo CD) | All clusters | Prometheus Alertmanager wrapper (prometheus-community/alertmanager) |
+| `stackrox` | Hub child Application (Argo CD) | Hub only | RHACS Central Services wrapper (charts.stackrox.io/central-services) |
 
 ## Local render (dry-run / review)
 

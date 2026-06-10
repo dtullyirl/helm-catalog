@@ -1,0 +1,55 @@
+# Default values for the alertmanager wrapper chart.
+#
+# These defaults are overridden per cluster via platform-config valueFiles:
+#   default.yaml → region.yaml → clusters/<type>/common.yaml → clusters/<type>/<group>/clusterdef.yaml
+#                                                             → clusters/<type>/<group>/alertmanager.yaml
+#
+# The alertmanager.yaml overlay (per-cluster) should only contain keys that differ
+# from these defaults — typically just config.route and config.receivers.
+#
+# All keys here are passed through to the upstream prometheus-community/alertmanager chart.
+# See https://github.com/prometheus-community/helm-charts/tree/main/charts/alertmanager
+# for the full values reference.
+
+alertmanager:
+  # -- Replica count. Single replica is sufficient for non-HA spoke clusters.
+  replicaCount: 1
+
+  # -- Alertmanager configuration. Override config.route and config.receivers per cluster
+  #    in the cluster's alertmanager.yaml overlay file in platform-config.
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      # Default receiver — override per cluster to route to Slack/PagerDuty/etc.
+      receiver: "null"
+      group_by: ["alertname", "namespace"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+    receivers:
+      - name: "null"
+    inhibit_rules: []
+
+  persistence:
+    enabled: false
+
+  # -- Resource limits suitable for a platform tool on a spoke cluster
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  # -- OpenShift: run as non-root without fixed UID
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
