@@ -1,0 +1,9 @@
+apiVersion: v2
+name: platform-config-snapshot
+description: >
+  Writes a ConfigMap containing the fully merged platform-config values for this cluster.
+  Deployed by Argo CD using the same four-layer valueFiles chain as every other platform
+  app, so the ConfigMap always reflects the exact configuration in effect.
+type: application
+version: 0.1.0
+# No dependencies — a single ConfigMap template only.

@@ -1,0 +1,32 @@
+{{- /*
+  configmap.yaml — platform config snapshot
+  Dumps the fully merged platform-config values into a ConfigMap so any engineer
+  can inspect the effective configuration directly on the cluster without having to
+  mentally merge four YAML files from Git.
+
+  This ConfigMap is managed by Argo CD — do not edit it manually; changes will be
+  reverted on the next sync.
+*/ -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # Single snapshot per cluster — name is stable so upgrades overwrite in place.
+  name: platform-config-snapshot
+  namespace: {{ .Values.snapshotNamespace | default "openshift-gitops" }}
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    # Use these labels to find the snapshot across all clusters in a multi-cluster query.
+    platform/config-snapshot: "true"
+    platform/cluster-type: {{ .Values.clusterType | quote }}
+    platform/cluster-group: {{ .Values.clusterGroup | quote }}
+  annotations:
+    # Signals to tooling and engineers that this resource must not be edited by hand.
+    platform/readonly: "true"
+    platform/description: >
+      Fully merged platform-config values for this cluster (all four layers combined).
+      Read-only — managed by Argo CD. Any manual edits will be reverted on next sync.
+    platform/layers: "default.yaml → region.yaml → common.yaml → clusterdef.yaml"
+data:
+  # Complete merged values as YAML — the single source of truth for what is applied.
+  values.yaml: |
+    {{ .Values | toYaml | nindent 4 }}

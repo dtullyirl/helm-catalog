@@ -1,0 +1,16 @@
+#
+# values.yaml — platform-config-snapshot defaults
+#
+# In production these values are supplied entirely by the Argo CD multi-source
+# valueFiles chain (default.yaml → region.yaml → common.yaml → clusterdef.yaml).
+# The fields below are only used when rendering the chart locally for testing.
+#
+
+# Namespace where the ConfigMap is written.
+# openshift-gitops is the canonical choice — it already exists and Argo CD manages it.
+snapshotNamespace: openshift-gitops
+
+# These are overridden by the merged platform-config at deploy time.
+clusterType: ""
+clusterGroup: ""
+clusterName: ""
