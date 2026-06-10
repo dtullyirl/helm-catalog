@@ -7,7 +7,9 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ .Values.org }}-spoke-root-aoa
+  # Name encodes group and type so it's clear which cluster this roots at a glance.
+  # e.g. "eng-hub-aoa", "payments-dev-aoa", "digital-preprod-aoa"
+  name: {{ .Values.clusterGroup }}-{{ .Values.clusterType }}-aoa
   namespace: openshift-gitops
   annotations:
     argocd.argoproj.io/sync-wave: "1"

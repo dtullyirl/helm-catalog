@@ -13,6 +13,9 @@ platform:
   version: main
   argocd:
     syncPolicy:
+      automated:
+        selfHeal: true   # drift from git is corrected automatically
+        prune: true      # child Application CRs removed from platform-apps are cleaned up
       syncOptions:
         - Validate=true
         - CreateNamespace=false
