@@ -1,0 +1,57 @@
+#
+# values.yaml — DevSpaces CheCluster defaults
+#
+# These values are applied to every cluster where devspacesConfig.enabled=true.
+# Override any key in platform-config at the region, environment, or cluster level.
+#
+
+devspaces:
+  # Namespace where the CheCluster CR is created.
+  # Must match the operator's target namespace (openshift-devspaces by default).
+  namespace: openshift-devspaces
+
+  # Name of the CheCluster CR — one per cluster.
+  instanceName: devspaces
+
+  devEnvironments:
+    # ── Concurrency limits ────────────────────────────────────────────────────
+    # Max workspaces a single user can create (running + stopped combined).
+    maxNumberOfWorkspacesPerUser: 2
+    # Max workspaces a single user can have running simultaneously.
+    maxNumberOfRunningWorkspacesPerUser: 2
+
+    # ── Idle / timeout guardrails ──────────────────────────────────────────────
+    # Stop a workspace after 30 minutes of no activity — largest resource-saving lever.
+    secondsOfInactivityBeforeIdling: 1800
+    # Hard upper bound on total workspace run time (8 hours); set to 0 for unlimited.
+    secondsOfRunBeforeIdling: 28800
+
+    # ── Namespace isolation ────────────────────────────────────────────────────
+    # Each user's workspace runs in its own namespace: <username>-devspaces
+    # Predictable, auditable, and easy to apply resource quotas against.
+    namespaceTemplate: "<username>-devspaces"
+    # Prevent users from overriding the namespace template.
+    allowUserDefinedWorkspaceNamespaces: false
+
+    # ── Storage ───────────────────────────────────────────────────────────────
+    # Default PVC size allocated per workspace. Override per cluster in clusterdef.yaml
+    # if the team needs larger persistent volumes.
+    defaultMaximumStorageSize: 10Gi
+    storage:
+      # per-user: one PVC per user (workspaces share it). Efficient for most teams.
+      # per-workspace: isolated PVC per workspace. Safer but consumes more storage.
+      pvcStrategy: per-user
+
+    # Default editor — VS Code in-browser via the che-code extension.
+    defaultEditor: che-incubator/che-code/latest
+
+    # Workspace startup timeout: fail fast rather than leaving pods pending.
+    startTimeoutSeconds: 300
+
+  components:
+    cheServer:
+      # INFO is sufficient for day-to-day operations; use DEBUG only when troubleshooting.
+      logLevel: INFO
+    metrics:
+      # Expose /metrics endpoint for Prometheus scraping.
+      enable: true

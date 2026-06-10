@@ -1,0 +1,7 @@
+apiVersion: v2
+name: devspaces
+description: Red Hat DevSpaces CheCluster configuration — deploys and configures the CheCluster CR on a spoke cluster where the DevSpaces operator is already installed via OLM.
+type: application
+version: 0.1.0
+# The DevSpaces operator (devspacesoperator) must be installed before this chart
+# is synced. Operator installation is handled by the operator-installer Application.

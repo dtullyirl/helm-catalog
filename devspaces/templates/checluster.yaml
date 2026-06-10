@@ -1,0 +1,42 @@
+{{- /*
+  checluster.yaml — CheCluster CR
+  Creates a single DevSpaces instance on this cluster.
+  Values flow from platform-config via the Argo CD multi-source valueFiles chain.
+  The DevSpaces operator (installed by operator-installer) must be ready before this is applied.
+  Argo CD sync-wave "1" ensures the operator installs first (operator-installer is wave "0").
+*/ -}}
+apiVersion: org.eclipse.che/v2
+kind: CheCluster
+metadata:
+  name: {{ .Values.devspaces.instanceName }}
+  namespace: {{ .Values.devspaces.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  devEnvironments:
+    # ── Concurrency ───────────────────────────────────────────────────────────
+    maxNumberOfWorkspacesPerUser: {{ .Values.devspaces.devEnvironments.maxNumberOfWorkspacesPerUser }}
+    maxNumberOfRunningWorkspacesPerUser: {{ .Values.devspaces.devEnvironments.maxNumberOfRunningWorkspacesPerUser }}
+
+    # ── Idle / timeout ────────────────────────────────────────────────────────
+    secondsOfInactivityBeforeIdling: {{ .Values.devspaces.devEnvironments.secondsOfInactivityBeforeIdling }}
+    secondsOfRunBeforeIdling: {{ .Values.devspaces.devEnvironments.secondsOfRunBeforeIdling }}
+
+    # ── Namespace isolation ───────────────────────────────────────────────────
+    namespaceTemplate: {{ .Values.devspaces.devEnvironments.namespaceTemplate | quote }}
+    allowUserDefinedWorkspaceNamespaces: {{ .Values.devspaces.devEnvironments.allowUserDefinedWorkspaceNamespaces }}
+
+    # ── Storage ───────────────────────────────────────────────────────────────
+    defaultMaximumStorageSize: {{ .Values.devspaces.devEnvironments.defaultMaximumStorageSize | quote }}
+    storage:
+      pvcStrategy: {{ .Values.devspaces.devEnvironments.storage.pvcStrategy }}
+
+    # ── Editor / startup ──────────────────────────────────────────────────────
+    defaultEditor: {{ .Values.devspaces.devEnvironments.defaultEditor | quote }}
+    startTimeoutSeconds: {{ .Values.devspaces.devEnvironments.startTimeoutSeconds }}
+
+  components:
+    cheServer:
+      logLevel: {{ .Values.devspaces.components.cheServer.logLevel }}
+    metrics:
+      enable: {{ .Values.devspaces.components.metrics.enable }}

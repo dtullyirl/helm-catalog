@@ -11,6 +11,7 @@ Each subdirectory is a standalone Helm chart. Reference it with `repoURL` pointi
 | `cluster-banner` | Spoke/hub child Application (Argo CD) | All clusters | OCP ConsoleNotification banner colour-coded by environment |
 | `alertmanager` | Spoke/hub child Application (Argo CD) | All clusters | Prometheus Alertmanager wrapper (prometheus-community/alertmanager) |
 | `stackrox` | Hub child Application (Argo CD) | Hub only | RHACS Central Services wrapper (charts.stackrox.io/central-services) |
+| `devspaces` | Spoke child Application (Argo CD) | Dev spokes | Red Hat DevSpaces CheCluster CR — browser-based VS Code workspaces for dev teams |
 
 ## Local render (dry-run / review)
 
