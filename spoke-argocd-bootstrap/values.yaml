@@ -24,3 +24,13 @@ platform:
 
 # Install OpenShift GitOps operator on the spoke before creating the root Application
 installOpenShiftGitOps: true
+
+# ── OpenShift GitOps operator ─────────────────────────────────────────────────
+# Installed via a direct OLM Subscription rather than the operator-installer pattern.
+# Reason: operator-installer creates Argo CD Application CRs, which requires Argo CD
+# to already be running — a chicken-and-egg problem at bootstrap time.
+# Pin channel + csv here for auditability; bump csv to upgrade the operator version.
+gitopsOperator:
+  channel: latest
+  csv: openshift-gitops-operator.v1.15.0
+  installPlanApproval: Automatic

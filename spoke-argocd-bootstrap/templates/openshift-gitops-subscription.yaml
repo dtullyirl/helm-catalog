@@ -1,4 +1,18 @@
 {{- if .Values.installOpenShiftGitOps }}
+{{- /*
+  Direct OLM Subscription for the OpenShift GitOps operator.
+
+  WHY NOT operator-installer?
+  The operator-installer pattern works by creating Argo CD Application CRs, which
+  requires Argo CD to already be running on the spoke. At bootstrap time Argo CD does
+  not yet exist — this Subscription IS what installs it. Moving this to operator-installer
+  would create a chicken-and-egg deadlock.
+
+  VERSION MANAGEMENT:
+  channel and csv are sourced from values.yaml (gitopsOperator block) so upgrades are
+  a single-line change with a full Git audit trail, matching the same discipline used
+  for every other operator in platform-config.
+*/ -}}
 ---
 apiVersion: v1
 kind: Namespace
@@ -15,16 +29,11 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  channel: latest
-  installPlanApproval: Automatic
+  channel: {{ .Values.gitopsOperator.channel }}
+  installPlanApproval: {{ .Values.gitopsOperator.installPlanApproval }}
   name: openshift-gitops-operator
+  # startingCSV pins the exact operator version — bump in values.yaml to upgrade.
+  startingCSV: {{ .Values.gitopsOperator.csv }}
   source: redhat-operators
   sourceNamespace: openshift-marketplace
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: platform-tools
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
 {{- end }}
