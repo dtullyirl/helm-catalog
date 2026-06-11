@@ -32,5 +32,5 @@ installOpenShiftGitOps: true
 # Pin channel + csv here for auditability; bump csv to upgrade the operator version.
 gitopsOperator:
   channel: latest
-  csv: openshift-gitops-operator.v1.15.0
+  csv: openshift-gitops-operator.v1.20.4
   installPlanApproval: Automatic
