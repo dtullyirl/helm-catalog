@@ -1,0 +1,11 @@
+apiVersion: v2
+name: argocd-instance
+description: >
+  Configures the operator-managed ArgoCD instance on each cluster via Server-Side Apply.
+  Patches spec.rbac, component resource limits, and resourceExclusions — all other fields
+  remain operator-owned. Also creates RoleBindings granting the platform admin group and
+  the cluster AD group admin access to the openshift-gitops namespace.
+type: application
+version: 0.1.0
+# Requires: OpenShift GitOps operator installed and ArgoCD CR already created by the operator.
+# Deployed by platform-apps as a shared Application (hub + spoke).

@@ -1,0 +1,130 @@
+#
+# values.yaml — argocd-instance defaults
+#
+# These values are overridden by the platform-config valueFiles chain at deploy time.
+# Override per environment in clusters/<type>/common.yaml (e.g. lower limits for dev,
+# higher for prod). Override per cluster in clusterdef.yaml for one-offs.
+#
+
+argocdInstance:
+  rbac:
+    # Platform-wide admin group — added to the Argo CD RBAC policy on every cluster.
+    # system:cluster-admins and cluster-admins are always included to preserve operator defaults.
+    # Override platformGroup in common.yaml if your AD group name differs per environment.
+    platformGroup: PLATFORM_ADMINS
+
+  # Component resource limits — mirrors operator defaults so values are explicit and auditable.
+  # Tune per environment in common.yaml (e.g. reduce limits on dev to save cost).
+  resources:
+    server:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 125m
+        memory: 128Mi
+    applicationSet:
+      limits:
+        cpu: "2"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+    repo:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    controller:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 1Gi
+    redis:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+
+  # High-churn resources excluded from Argo CD's watch loop.
+  # Mirrors the operator defaults — extend here to suppress additional noisy resources.
+  # Add entries in common.yaml or clusterdef.yaml to append cluster-specific exclusions.
+  resourceExclusions: |
+    - apiGroups:
+      - ""
+      - discovery.k8s.io
+      clusters:
+      - '*'
+      kinds:
+      - Endpoints
+      - EndpointSlice
+    - apiGroups:
+      - apiregistration.k8s.io
+      clusters:
+      - '*'
+      kinds:
+      - APIService
+    - apiGroups:
+      - coordination.k8s.io
+      clusters:
+      - '*'
+      kinds:
+      - Lease
+    - apiGroups:
+      - authentication.k8s.io
+      - authorization.k8s.io
+      clusters:
+      - '*'
+      kinds:
+      - SelfSubjectReview
+      - TokenReview
+      - LocalSubjectAccessReview
+      - SelfSubjectAccessReview
+      - SelfSubjectRulesReview
+      - SubjectAccessReview
+    - apiGroups:
+      - certificates.k8s.io
+      clusters:
+      - '*'
+      kinds:
+      - CertificateSigningRequest
+    - apiGroups:
+      - cert-manager.io
+      clusters:
+      - '*'
+      kinds:
+      - CertificateRequest
+    - apiGroups:
+      - tekton.dev
+      clusters:
+      - '*'
+      kinds:
+      - TaskRun
+      - PipelineRun
+    - apiGroups:
+      - kyverno.io
+      - reports.kyverno.io
+      - wgpolicyk8s.io
+      clusters:
+      - '*'
+      kinds:
+      - PolicyReport
+      - ClusterPolicyReport
+      - EphemeralReport
+      - ClusterEphemeralReport
+      - AdmissionReport
+      - ClusterAdmissionReport
+      - BackgroundScanReport
+      - ClusterBackgroundScanReport
+      - UpdateRequest
+
+# adGroupName is sourced from clusterdef.yaml via the valueFiles chain.
+# When set, the AD group is granted Argo CD admin role AND namespace admin access
+# to openshift-gitops alongside the platform group above.
+adGroupName: ""

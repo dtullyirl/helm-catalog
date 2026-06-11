@@ -1,0 +1,52 @@
+{{- /*
+  argocd-cr.yaml — patches the operator-managed ArgoCD CR via Server-Side Apply.
+
+  IMPORTANT — SSA field ownership:
+  This chart only declares the fields it manages: spec.rbac, component resources, and
+  spec.resourceExclusions. All other fields (SSO/Dex, routes, ingress, HA, monitoring,
+  grafana, prometheus, imageUpdater) are intentionally absent — the operator retains
+  full ownership of those and will not be evicted.
+
+  The ArgoCD CR must already exist (created by the operator) before this is applied.
+  sync-wave "1" ensures the operator subscription (wave "0") fires first.
+*/ -}}
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  rbac:
+    defaultPolicy: ''
+    # Always include the operator defaults so existing access is not accidentally revoked.
+    # platformGroup and adGroupName are added on top — harden by removing the broad
+    # system:cluster-admins / cluster-admins lines when ready.
+    policy: |
+      g, system:cluster-admins, role:admin
+      g, cluster-admins, role:admin
+      g, {{ .Values.argocdInstance.rbac.platformGroup }}, role:admin
+      {{- if .Values.adGroupName }}
+      g, {{ .Values.adGroupName }}, role:admin
+      {{- end }}
+    scopes: '[groups]'
+
+  # ── Component resource limits ──────────────────────────────────────────────
+  # Declared explicitly so they are version-controlled and auditable.
+  # Override in platform-config/clusters/<type>/common.yaml to tune per environment.
+  server:
+    resources: {{ .Values.argocdInstance.resources.server | toYaml | nindent 6 }}
+  applicationSet:
+    resources: {{ .Values.argocdInstance.resources.applicationSet | toYaml | nindent 6 }}
+  repo:
+    resources: {{ .Values.argocdInstance.resources.repo | toYaml | nindent 6 }}
+  controller:
+    resources: {{ .Values.argocdInstance.resources.controller | toYaml | nindent 6 }}
+  redis:
+    resources: {{ .Values.argocdInstance.resources.redis | toYaml | nindent 6 }}
+
+  # ── Resource exclusions ────────────────────────────────────────────────────
+  # Prevents Argo CD from watching high-churn resources (Endpoints, Leases, TaskRuns, etc.)
+  # that would otherwise generate constant diff noise and slow reconciliation.
+  resourceExclusions: {{ .Values.argocdInstance.resourceExclusions | toYaml | nindent 4 }}

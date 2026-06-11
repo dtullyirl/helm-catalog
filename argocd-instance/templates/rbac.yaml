@@ -1,0 +1,50 @@
+{{- /*
+  rbac.yaml — RoleBindings granting admin access to the openshift-gitops namespace.
+
+  Two bindings are created:
+  1. Platform group (argocdInstance.rbac.platformGroup) — always created.
+     This gives the platform team admin access regardless of cluster.
+  2. Cluster AD group (adGroupName from clusterdef.yaml) — created only when set.
+     This gives the cluster's team admin access alongside the platform group.
+
+  The "admin" ClusterRole grants full namespace-scoped access: read/write on all
+  resources in openshift-gitops, including Applications and Secrets.
+*/ -}}
+---
+# Platform admin group — present on every cluster
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: platform-admins-argocd-admin
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    platform/managed-by: argocd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: {{ .Values.argocdInstance.rbac.platformGroup }}
+{{- if .Values.adGroupName }}
+---
+# Cluster AD group — present when adGroupName is set in clusterdef.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-ad-group-argocd-admin
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    platform/managed-by: argocd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: {{ .Values.adGroupName }}
+{{- end }}
