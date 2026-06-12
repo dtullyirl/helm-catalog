@@ -1,0 +1,11 @@
+apiVersion: v2
+name: cluster-guardrails
+description: >
+  Platform guardrails for OpenShift clusters. Uses the OpenShift project template
+  mechanism to stamp a ResourceQuota, LimitRange, and default NetworkPolicies into
+  every namespace created via `oc new-project`.
+
+  See README.md for override patterns and per-environment tuning.
+type: application
+version: 0.1.0
+appVersion: "1.0"

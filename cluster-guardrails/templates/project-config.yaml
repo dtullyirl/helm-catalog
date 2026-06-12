@@ -1,0 +1,25 @@
+#
+# project-config.yaml — wire the project template into OpenShift
+#
+# Patches the cluster-scoped project.config.openshift.io/cluster CR to reference
+# the project-request Template (created by project-template.yaml).
+#
+# After this patch, every `oc new-project` call renders the template and stamps
+# the ResourceQuota, LimitRange, and NetworkPolicy into the new namespace.
+#
+# Uses Server-Side Apply (SSA) so Argo CD only owns the projectRequestTemplate
+# field and does not conflict with other controllers managing this CR.
+#
+---
+apiVersion: config.openshift.io/v1
+kind: Project
+metadata:
+  name: cluster
+  annotations:
+    # SSA: Argo CD adopts only the fields it declares, leaving all others untouched.
+    argocd.argoproj.io/sync-options: ServerSideApply=true,Validate=false
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  projectRequestTemplate:
+    # Must match the Template name in openshift-config created by project-template.yaml.
+    name: project-request

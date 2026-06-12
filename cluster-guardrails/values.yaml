@@ -1,0 +1,72 @@
+#
+# values.yaml — cluster-guardrails
+#
+# Controls the OpenShift project template that is stamped into every namespace
+# created via `oc new-project`. Override any section in platform-config per
+# environment (common.yaml) or per cluster (clusterdef.yaml).
+#
+# Merge path:  default.yaml → region.yaml → common.yaml → clusterdef.yaml
+#
+
+# ── Project identity ─────────────────────────────────────────────────────────
+# Passed in by the platform-apps Argo CD Application — do not set here.
+clusterType: ""
+clusterGroup: ""
+clusterName: ""
+
+# ── Resource quota ────────────────────────────────────────────────────────────
+# Applied as a ResourceQuota object in every new project.
+# Teams that need more capacity should request a clusterdef.yaml override or use
+# a dedicated cluster — this is the safe starting point for shared dev clusters.
+projectTemplate:
+  quota:
+    enabled: true
+    hard:
+      # Aggregate hard limits across all pods in the namespace.
+      # A namespace cannot schedule work that would exceed these totals.
+      limits.cpu: "2"
+      limits.memory: 4Gi
+      requests.cpu: 500m
+      requests.memory: 512Mi
+      # Cardinality caps — prevents runaway resource sprawl.
+      pods: "20"
+      services: "10"
+      persistentvolumeclaims: "5"
+
+  # ── LimitRange ──────────────────────────────────────────────────────────────
+  # Sets default requests/limits on containers that do not specify their own.
+  # Without this, a pod with no limits defined would immediately violate the quota.
+  limitRange:
+    enabled: true
+    # Applied to containers that declare no resource requests.
+    defaultRequest:
+      cpu: 100m
+      memory: 128Mi
+    # Applied to containers that declare no resource limits.
+    default:
+      cpu: 500m
+      memory: 512Mi
+    # Hard ceiling — no single container may exceed these values.
+    max:
+      cpu: "2"
+      memory: 4Gi
+
+# ── Network policy ────────────────────────────────────────────────────────────
+# Stamped into every new project alongside the quota/limitRange.
+#
+# denyOtherNamespaces controls the isolation posture:
+#   false (default) — cross-namespace traffic is permitted. Good for dev where
+#                     teams need to test service-to-service calls freely.
+#   true            — only traffic from within the same namespace, plus the
+#                     namespaces in allowFromNamespaces, is permitted. Use in
+#                     preprod and prod for proper tenant isolation.
+#
+# allowFromNamespaces — always permitted regardless of denyOtherNamespaces.
+# openshift-ingress   allows OCP Routes to reach pods.
+# openshift-monitoring allows Prometheus to scrape metrics.
+networkPolicy:
+  enabled: true
+  denyOtherNamespaces: false
+  allowFromNamespaces:
+    - openshift-ingress
+    - openshift-monitoring

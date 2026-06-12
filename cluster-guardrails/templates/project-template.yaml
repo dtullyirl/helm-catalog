@@ -1,0 +1,145 @@
+{{- $quota := .Values.projectTemplate.quota }}
+{{- $lr    := .Values.projectTemplate.limitRange }}
+{{- $np    := .Values.networkPolicy }}
+#
+# project-template.yaml — OpenShift project request template
+#
+# This Template lives in the openshift-config namespace. OpenShift reads it
+# every time a user runs `oc new-project` and stamps all objects below into
+# the new namespace (substituting ${PROJECT_NAME} with the actual name).
+#
+# The project.config.openshift.io/cluster CR (see project-config.yaml) points
+# at this template by name.
+#
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: project-request
+  namespace: openshift-config
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    description: >
+      Platform default project template — stamps ResourceQuota, LimitRange, and
+      NetworkPolicy objects into every new OpenShift project.
+objects:
+
+{{- if $quota.enabled }}
+  # ── ResourceQuota ─────────────────────────────────────────────────────────
+  # Hard cap on aggregate resource consumption within the new namespace.
+  # Teams needing higher limits should request a platform-config override.
+  - apiVersion: v1
+    kind: ResourceQuota
+    metadata:
+      name: default-quota
+      namespace: ${PROJECT_NAME}
+      annotations:
+        platform/managed-by: cluster-guardrails
+        platform/note: "Read-only — managed by GitOps. Override in platform-config."
+    spec:
+      hard:
+        limits.cpu: {{ $quota.hard | dig "limits.cpu" "2" | quote }}
+        limits.memory: {{ $quota.hard | dig "limits.memory" "4Gi" | quote }}
+        requests.cpu: {{ $quota.hard | dig "requests.cpu" "500m" | quote }}
+        requests.memory: {{ $quota.hard | dig "requests.memory" "512Mi" | quote }}
+        pods: {{ $quota.hard | dig "pods" "20" | quote }}
+        services: {{ $quota.hard | dig "services" "10" | quote }}
+        persistentvolumeclaims: {{ $quota.hard | dig "persistentvolumeclaims" "5" | quote }}
+{{- end }}
+
+{{- if $lr.enabled }}
+  # ── LimitRange ────────────────────────────────────────────────────────────
+  # Injects default requests/limits for any container that omits them.
+  # Without this, a pod with no limits set would immediately violate the quota above.
+  - apiVersion: v1
+    kind: LimitRange
+    metadata:
+      name: default-limits
+      namespace: ${PROJECT_NAME}
+      annotations:
+        platform/managed-by: cluster-guardrails
+    spec:
+      limits:
+        - type: Container
+          default:
+            cpu: {{ $lr.default.cpu | quote }}
+            memory: {{ $lr.default.memory | quote }}
+          defaultRequest:
+            cpu: {{ $lr.defaultRequest.cpu | quote }}
+            memory: {{ $lr.defaultRequest.memory | quote }}
+          max:
+            cpu: {{ $lr.max.cpu | quote }}
+            memory: {{ $lr.max.memory | quote }}
+{{- end }}
+
+{{- if $np.enabled }}
+  # ── NetworkPolicy: allow within namespace ─────────────────────────────────
+  # Pods within the same project may always communicate with each other.
+  # This policy is always created when networkPolicy.enabled is true.
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: allow-within-namespace
+      namespace: ${PROJECT_NAME}
+      annotations:
+        platform/managed-by: cluster-guardrails
+    spec:
+      podSelector: {}
+      ingress:
+        - from:
+            - podSelector: {}
+
+{{- range $np.allowFromNamespaces }}
+  # ── NetworkPolicy: allow from {{ . }} ─────────────────────────────────────
+  # Permits ingress from the {{ . }} namespace.
+  # openshift-ingress  → OCP Routes can reach pods in this project.
+  # openshift-monitoring → Prometheus can scrape metrics from this project.
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: allow-from-{{ . }}
+      namespace: ${PROJECT_NAME}
+      annotations:
+        platform/managed-by: cluster-guardrails
+    spec:
+      podSelector: {}
+      ingress:
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  kubernetes.io/metadata.name: {{ . }}
+{{- end }}
+
+{{- if $np.denyOtherNamespaces }}
+  # ── NetworkPolicy: deny all other namespace ingress ───────────────────────
+  # Only rendered when networkPolicy.denyOtherNamespaces: true (preprod / prod).
+  # Combined with the allow-* policies above, this creates a default-deny posture
+  # where only openshift-ingress and openshift-monitoring can reach pods from outside.
+  #
+  # In dev (denyOtherNamespaces: false) this policy is omitted so teams can test
+  # cross-namespace service calls freely.
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: deny-other-namespaces
+      namespace: ${PROJECT_NAME}
+      annotations:
+        platform/managed-by: cluster-guardrails
+    spec:
+      podSelector: {}
+      ingress:
+        - from:
+            - podSelector: {}
+{{- end }}
+{{- end }}
+
+# ── Template parameters ───────────────────────────────────────────────────────
+# OpenShift substitutes these when rendering the template into a new project.
+# Do not remove — OCP will refuse to use the template if required parameters are absent.
+parameters:
+  - name: PROJECT_NAME
+    required: true
+  - name: PROJECT_DISPLAYNAME
+  - name: PROJECT_DESCRIPTION
+  - name: PROJECT_ADMIN_USER
+  - name: PROJECT_REQUESTING_USER
