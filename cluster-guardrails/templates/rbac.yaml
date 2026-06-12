@@ -1,0 +1,49 @@
+#
+# rbac.yaml — grant Argo CD permission to manage resources in openshift-config
+#
+# The openshift-config namespace is a protected system namespace. By default the
+# Argo CD application controller service account cannot manage resources there.
+#
+# These cluster-scoped RBAC resources are applied at sync-wave "-1" so they land
+# before the Template (wave 0) and the Project config patch (wave 1) are attempted.
+#
+# Resources granted:
+#   template.openshift.io/templates in openshift-config
+#     → required to create/update the project-request Template object
+#   config.openshift.io/projects (cluster-scoped)
+#     → required to SSA-patch project.config.openshift.io/cluster
+#
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-guardrails-argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    platform/managed-by: cluster-guardrails
+rules:
+  # Manage the project-request Template in openshift-config
+  - apiGroups: ["template.openshift.io"]
+    resources: ["templates"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # SSA-patch project.config.openshift.io/cluster
+  - apiGroups: ["config.openshift.io"]
+    resources: ["projects"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-guardrails-argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    platform/managed-by: cluster-guardrails
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-guardrails-argocd
+subjects:
+  - kind: ServiceAccount
+    # The Argo CD application controller service account — manages all Application syncs.
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
