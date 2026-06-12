@@ -24,6 +24,36 @@ metadata:
       NetworkPolicy objects into every new OpenShift project.
 objects:
 
+  # ── Project (REQUIRED) ────────────────────────────────────────────────────
+  # OpenShift validates that the template contains a Project resource — without
+  # this the project controller rejects the template entirely.
+  # This object creates the actual namespace and wires up OCP project metadata.
+  - apiVersion: project.openshift.io/v1
+    kind: Project
+    metadata:
+      annotations:
+        openshift.io/description: ${PROJECT_DESCRIPTION}
+        openshift.io/display-name: ${PROJECT_DISPLAYNAME}
+        openshift.io/requester: ${PROJECT_REQUESTING_USER}
+      name: ${PROJECT_NAME}
+
+  # ── Admin RoleBinding ─────────────────────────────────────────────────────
+  # Grants the requesting user admin access to their own project.
+  # Without this the user who ran `oc new-project` is locked out of the namespace.
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: admin
+      namespace: ${PROJECT_NAME}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: admin
+    subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: User
+        name: ${PROJECT_ADMIN_USER}
+
 {{- if $quota.enabled }}
   # ── ResourceQuota ─────────────────────────────────────────────────────────
   # Hard cap on aggregate resource consumption within the new namespace.
