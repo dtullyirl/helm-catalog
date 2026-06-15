@@ -26,10 +26,11 @@ metadata:
   namespace: {{ .Values.devspaces.namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-    # Validate=false: skip Argo CD client-side schema validation.
-    # The CheCluster CRD is complex and Argo CD's bundled OpenAPI schema is often
-    # stale — server-side validation via the API server is the authoritative check.
-    argocd.argoproj.io/sync-options: Validate=false
+    # ServerSideApply=true: delegate patch creation to the API server, which knows the
+    # actual installed CRD schema. This avoids Argo CD's "typed patch object" errors that
+    # occur when its bundled OpenAPI schema differs from the operator's installed CRD.
+    # Validate=false: skip Argo CD client-side validation for the same reason.
+    argocd.argoproj.io/sync-options: Validate=false,ServerSideApply=true
 spec:
   devEnvironments:
     # ── Concurrency ───────────────────────────────────────────────────────────
