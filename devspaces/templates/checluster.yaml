@@ -26,6 +26,10 @@ metadata:
   namespace: {{ .Values.devspaces.namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    # Validate=false: skip Argo CD client-side schema validation.
+    # The CheCluster CRD is complex and Argo CD's bundled OpenAPI schema is often
+    # stale — server-side validation via the API server is the authoritative check.
+    argocd.argoproj.io/sync-options: Validate=false
 spec:
   devEnvironments:
     # ── Concurrency ───────────────────────────────────────────────────────────
@@ -37,8 +41,10 @@ spec:
     secondsOfRunBeforeIdling: {{ .Values.devspaces.devEnvironments.secondsOfRunBeforeIdling }}
 
     # ── Namespace isolation ───────────────────────────────────────────────────
-    namespaceTemplate: {{ .Values.devspaces.devEnvironments.namespaceTemplate | quote }}
-    allowUserDefinedWorkspaceNamespaces: {{ .Values.devspaces.devEnvironments.allowUserDefinedWorkspaceNamespaces }}
+    # CheCluster v2: defaultNamespace replaces the v1 namespaceTemplate field.
+    defaultNamespace:
+      template: {{ .Values.devspaces.devEnvironments.defaultNamespace.template | quote }}
+      autoProvision: {{ .Values.devspaces.devEnvironments.defaultNamespace.autoProvision }}
 
     # ── Storage ───────────────────────────────────────────────────────────────
     defaultMaximumStorageSize: {{ .Values.devspaces.devEnvironments.defaultMaximumStorageSize | quote }}

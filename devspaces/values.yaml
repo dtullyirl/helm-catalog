@@ -29,9 +29,12 @@ devspaces:
     # ── Namespace isolation ────────────────────────────────────────────────────
     # Each user's workspace runs in its own namespace: <username>-devspaces
     # Predictable, auditable, and easy to apply resource quotas against.
-    namespaceTemplate: "<username>-devspaces"
-    # Prevent users from overriding the namespace template.
-    allowUserDefinedWorkspaceNamespaces: false
+    # CheCluster v2 field: spec.devEnvironments.defaultNamespace.template
+    defaultNamespace:
+      template: "<username>-devspaces"
+      # autoProvision: true means DevSpaces creates the namespace automatically.
+      # Set false only if you pre-create user namespaces via another mechanism.
+      autoProvision: true
 
     # ── Storage ───────────────────────────────────────────────────────────────
     # Default PVC size allocated per workspace. Override per cluster in clusterdef.yaml
