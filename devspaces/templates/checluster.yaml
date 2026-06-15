@@ -48,7 +48,6 @@ spec:
       autoProvision: {{ .Values.devspaces.devEnvironments.defaultNamespace.autoProvision }}
 
     # ── Storage ───────────────────────────────────────────────────────────────
-    defaultMaximumStorageSize: {{ .Values.devspaces.devEnvironments.defaultMaximumStorageSize | quote }}
     storage:
       pvcStrategy: {{ .Values.devspaces.devEnvironments.storage.pvcStrategy }}
 

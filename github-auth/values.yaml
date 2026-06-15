@@ -1,0 +1,67 @@
+#
+# values.yaml — github-auth
+#
+# Per-cluster values (clientID, organizations) are set in clusterdef.yaml.
+# These defaults define the structure and safe fallbacks.
+#
+# Pre-requisite secrets (must be created manually before enabling this chart):
+#   oc create secret generic github-oauth-client-secret \
+#     --from-literal=clientSecret=<SECRET> -n openshift-config
+#
+#   oc create secret generic github-groupsync-token \
+#     --from-literal=token=<PAT> -n group-sync-operator
+#
+# See helm-catalog/github-auth/README.md for full setup instructions.
+#
+
+# ── Cluster identity ─────────────────────────────────────────────────────────
+# Injected by platform-apps — do not set here.
+clusterType: ""
+clusterGroup: ""
+clusterName: ""
+
+# ── GitHub OAuth identity provider ───────────────────────────────────────────
+github:
+  # Name shown on the OpenShift login screen and used in the callback URL:
+  #   https://oauth-openshift.apps.<domain>/oauth2callback/<idpName>
+  # If you change this, update the GitHub OAuth App callback URL too.
+  idpName: GitHub
+
+  # GitHub OAuth App client ID — unique per cluster.
+  # Get this from: github.com/organizations/<org>/settings/applications
+  # Set in clusterdef.yaml for each spoke cluster.
+  clientID: ""
+
+  # Name of the pre-created Secret in openshift-config containing the client secret.
+  # Key inside the secret must be named `clientSecret`.
+  secretName: github-oauth-client-secret
+
+  # Restrict login to members of these GitHub organisations.
+  # At least one organisation or team must be specified.
+  organizations: []
+  # - your-github-org
+
+  # Optional: further restrict to specific teams within the org (format: org/team-slug).
+  # Leave empty to allow all org members.
+  teams: []
+  # - your-github-org/platform-admins
+
+# ── GitHub team → OpenShift Group sync ───────────────────────────────────────
+# Uses the group-sync-operator (redhat-cop) to create and update OpenShift Groups
+# from GitHub org teams. Groups are then available for use in RBAC and Argo CD policy.
+#
+# Requires the group-sync-operator to be installed (groupSyncOperator in operators catalog).
+groupSync:
+  enabled: true
+
+  # GitHub org to enumerate teams from.
+  # Set in clusterdef.yaml — typically matches github.organizations[0].
+  organization: ""
+
+  # Name of the pre-created Secret in the group-sync-operator namespace.
+  # Key inside the secret must be named `token`. PAT requires read:org scope.
+  credentialSecretName: github-groupsync-token
+
+  # Cron schedule for periodic sync.
+  # Default: every 6 hours. Reduce for faster propagation in dev.
+  schedule: "0 */6 * * *"

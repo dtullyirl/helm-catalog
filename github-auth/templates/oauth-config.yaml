@@ -1,0 +1,52 @@
+{{- $gh := .Values.github }}
+{{- if not $gh.clientID }}
+{{- fail "github.clientID is required — set it in clusterdef.yaml for this cluster" }}
+{{- end }}
+{{- if and (empty $gh.organizations) (empty $gh.teams) }}
+{{- fail "at least one entry in github.organizations or github.teams is required" }}
+{{- end }}
+#
+# oauth-config.yaml — configure GitHub as an OpenShift identity provider
+#
+# Patches oauth.config.openshift.io/cluster via Server-Side Apply.
+# Argo CD only owns the identityProviders field declared here — all other
+# OAuth fields (token config, templates) remain under operator control.
+#
+# IMPORTANT: identityProviders is treated as an atomic list in SSA.
+# This replaces the entire identityProviders list. If you need multiple
+# providers, add them all in this chart's values rather than configuring
+# them separately.
+#
+---
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: ServerSideApply=true,Validate=false
+    platform/managed-by: github-auth
+spec:
+  identityProviders:
+    - name: {{ $gh.idpName | quote }}
+      # claim: maps GitHub username directly to OpenShift identity.
+      # Use 'lookup' if you want to pre-provision users before they can log in.
+      mappingMethod: claim
+      type: GitHub
+      github:
+        clientID: {{ $gh.clientID | quote }}
+        clientSecret:
+          # Secret must be pre-created in openshift-config — see README.md.
+          name: {{ $gh.secretName | quote }}
+        {{- if $gh.organizations }}
+        organizations:
+          {{- range $gh.organizations }}
+          - {{ . | quote }}
+          {{- end }}
+        {{- end }}
+        {{- if $gh.teams }}
+        teams:
+          {{- range $gh.teams }}
+          - {{ . | quote }}
+          {{- end }}
+        {{- end }}

@@ -1,0 +1,11 @@
+apiVersion: v2
+name: github-auth
+description: >
+  Configures GitHub as an OpenShift identity provider and syncs GitHub org teams
+  to OpenShift Groups via the group-sync-operator.
+
+  Per-cluster values (clientID, organization) are set in clusterdef.yaml.
+  Two secrets must be pre-created on the cluster before enabling — see README.md.
+type: application
+version: 0.1.0
+appVersion: "1.0"

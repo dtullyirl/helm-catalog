@@ -1,0 +1,41 @@
+{{- if .Values.groupSync.enabled }}
+{{- $gs := .Values.groupSync }}
+{{- if not $gs.organization }}
+{{- fail "groupSync.organization is required when groupSync.enabled is true — set it in clusterdef.yaml" }}
+{{- end }}
+#
+# group-sync.yaml — sync GitHub org teams to OpenShift Groups
+#
+# Creates a GroupSync CR consumed by the group-sync-operator (redhat-cop).
+# The operator periodically calls the GitHub API to create/update OpenShift
+# Group objects that mirror GitHub team membership.
+#
+# Requires:
+#   1. group-sync-operator installed (via groupSyncOperator in operators catalog)
+#   2. Secret {{ $gs.credentialSecretName }} pre-created in group-sync-operator namespace
+#      with a GitHub PAT (read:org scope) — see README.md
+#
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: github-group-sync
+  namespace: group-sync-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    platform/managed-by: github-auth
+spec:
+  providers:
+    - name: github
+      github:
+        credentialsSecret:
+          # PAT secret must be pre-created in this namespace — see README.md.
+          name: {{ $gs.credentialSecretName | quote }}
+          namespace: group-sync-operator
+        # Sync all teams from this GitHub organisation.
+        organization: {{ $gs.organization | quote }}
+  # Cron schedule for periodic sync — override in clusterdef.yaml if needed.
+  # Force an immediate sync: oc annotate groupsync github-group-sync \
+  #   redhatcop.redhat.io/forcereconciliation=true -n group-sync-operator --overwrite
+  schedule: {{ $gs.schedule | quote }}
+{{- end }}

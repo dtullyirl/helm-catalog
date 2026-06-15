@@ -37,12 +37,16 @@ devspaces:
       autoProvision: true
 
     # ── Storage ───────────────────────────────────────────────────────────────
-    # Default PVC size allocated per workspace. Override per cluster in clusterdef.yaml
-    # if the team needs larger persistent volumes.
-    defaultMaximumStorageSize: 10Gi
+    # The DevSpaces operator defaults to 10Gi per-user PVC with the per-user strategy,
+    # which is exactly what we want for a demo. No override needed.
+    # To increase the size on a specific cluster add to clusterdef.yaml:
+    #   devspaces:
+    #     devEnvironments:
+    #       storage:
+    #         pvcSize: 20Gi   # check your installed CRD version supports this field
     storage:
-      # per-user: one PVC per user (workspaces share it). Efficient for most teams.
-      # per-workspace: isolated PVC per workspace. Safer but consumes more storage.
+      # per-user: one PVC shared across all workspaces for a user (10Gi by operator default).
+      # per-workspace: isolated PVC per workspace — uses more storage but fully isolated.
       pvcStrategy: per-user
 
     # Default editor — VS Code in-browser via the che-code extension.

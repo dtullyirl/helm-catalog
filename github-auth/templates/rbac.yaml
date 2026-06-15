@@ -1,0 +1,43 @@
+#
+# rbac.yaml — grant Argo CD permission to manage OAuth and GroupSync resources
+#
+# Two cluster-scoped permissions are required:
+#   config.openshift.io/oauths — to SSA-patch oauth.config.openshift.io/cluster
+#   redhatcop.redhat.io/groupsyncs — to manage the GroupSync CR
+#
+# Applied at sync-wave "-1" so these permissions land before the OAuth config
+# (wave 0) and GroupSync CR (wave 1) are attempted.
+#
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: github-auth-argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    platform/managed-by: github-auth
+rules:
+  # SSA-patch oauth.config.openshift.io/cluster to add the GitHub identity provider
+  - apiGroups: ["config.openshift.io"]
+    resources: ["oauths"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  # Manage the GroupSync CR that drives GitHub team → OpenShift Group sync
+  - apiGroups: ["redhatcop.redhat.io"]
+    resources: ["groupsyncs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: github-auth-argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    platform/managed-by: github-auth
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: github-auth-argocd
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
