@@ -1,0 +1,40 @@
+#
+# rbac.yaml — grant Argo CD permission to manage CheCluster resources
+#
+# The CheCluster CR lives in the openshift-devspaces namespace, which the Argo CD
+# application controller cannot access by default.
+#
+# A ClusterRole + ClusterRoleBinding is used (rather than a namespaced Role) so
+# that the grant is not itself blocked by namespace-level restrictions.
+#
+# Applied at sync-wave "-1" so the permission lands before the CheCluster CR
+# (wave 0) is attempted.
+#
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: devspaces-argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    platform/managed-by: devspaces
+rules:
+  - apiGroups: ["org.eclipse.che"]
+    resources: ["checlusters"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: devspaces-argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    platform/managed-by: devspaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: devspaces-argocd
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
