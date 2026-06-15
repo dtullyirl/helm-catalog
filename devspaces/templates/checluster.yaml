@@ -5,6 +5,20 @@
   The DevSpaces operator (installed by operator-installer) must be ready before this is applied.
   Argo CD sync-wave "1" ensures the operator installs first (operator-installer is wave "0").
 */ -}}
+---
+# Pre-create the namespace so the CheCluster CR and RBAC resources have a home.
+# The DevSpaces operator also manages this namespace; pre-creating it is safe and
+# prevents the "namespace not found" error when Argo CD syncs for the first time.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.devspaces.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+  labels:
+    # Marks this namespace as managed by our GitOps platform
+    platform/managed-by: devspaces
+---
 apiVersion: org.eclipse.che/v2
 kind: CheCluster
 metadata:
