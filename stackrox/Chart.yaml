@@ -2,7 +2,7 @@ apiVersion: v2
 name: stackrox
 description: >
   Platform wrapper for RHACS (Red Hat Advanced Cluster Security) Central Services.
-  Deployed on the hub cluster only — guarded by clusterType=hub in the platform-apps template.
+  Deployed on the management cluster only — guarded by clusterType=management in the platform-apps template.
   Deploys the ACS Central instance; ACS operator must already be installed via operator-installer.
 type: application
 version: 0.1.0

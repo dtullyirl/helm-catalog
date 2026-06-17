@@ -6,19 +6,21 @@
 clusterType: dev
 clusterGroup: ""
 clusterName: ""
+# regionName flows in from platform-config/regions/<region>/region.yaml (layer 2 of the merge chain)
+regionName: ""
 
 clusterTheme:
   banner:
     # Text colour (white works on all the background colours below)
     color: "#ffffff"
     # Background colour — set per environment in platform-config clusters/<type>/common.yaml:
-    #   dev:     #28a745  (green)
-    #   preprod: #fd7e14  (orange)
-    #   prod:    #dc3545  (red)
-    #   hub:     #6f42c1  (purple)
+    #   dev:        #28a745  (green)
+    #   preprod:    #fd7e14  (orange)
+    #   prod:       #dc3545  (red)
+    #   management: #6f42c1  (purple)
     backgroundColor: "#28a745"
     # OCP ConsoleNotification location — BannerTop | BannerBottom | BannerTopBottom
     location: BannerTop
-    # Optional custom text. When empty the banner defaults to "TYPE | group" (e.g. "DEV | payments").
-    # Set in clusterdef.yaml to give a specific cluster a more descriptive label.
+    # Optional custom text. When empty the banner defaults to "TYPE | group | regionName"
+    # (e.g. "DEV | payments | eu-west-1"). Set in clusterdef.yaml for a more descriptive label.
     text: ""

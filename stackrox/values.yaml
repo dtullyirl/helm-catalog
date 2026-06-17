@@ -1,10 +1,10 @@
 # Default values for the stackrox/ACS wrapper chart.
 #
-# These defaults are overridden by the hub cluster's platform-config layers:
-#   default.yaml → regions/<r>/region.yaml → clusters/hub/common.yaml → clusters/hub/eng/clusterdef.yaml
+# These defaults are overridden by the management cluster's platform-config layers:
+#   default.yaml → regions/<r>/region.yaml → clusters/management/common.yaml → clusters/management/eng-hub/clusterdef.yaml
 #
-# The advancedClusterSecurity.values block in hub/common.yaml is merged in via valuesObject
-# in the Argo CD Application template — see platform-apps/templates/hub/advanced-cluster-security-app.yaml.
+# The advancedClusterSecurity.values block in management/common.yaml is merged in via valuesObject
+# in the Argo CD Application template — see platform-apps/templates/management/advanced-cluster-security-app.yaml.
 #
 # Full values reference:
 #   https://github.com/stackrox/stackrox/tree/master/deploy/helm/stackrox-central
@@ -17,7 +17,7 @@
 # -- All values are nested under the dependency chart alias (central-services)
 central-services:
   # -- Central deployment resource limits.
-  #    Override per hub cluster in clusters/hub/<group>/clusterdef.yaml
+  #    Override per management cluster in clusters/management/<group>/clusterdef.yaml
   central:
     resources:
       limits:
@@ -42,7 +42,7 @@ central-services:
   scannerV4:
     disable: false
 
-# -- Passed through from hub/common.yaml advancedClusterSecurity.values via valuesObject
+# -- Passed through from management/common.yaml advancedClusterSecurity.values via valuesObject
 # These top-level keys are mapped to the chart values in the Argo CD Application template.
 stackrox:
   namespace: stackrox
