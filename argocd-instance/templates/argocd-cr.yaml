@@ -37,6 +37,12 @@ spec:
   # Override in platform-config/clusters/<type>/common.yaml to tune per environment.
   server:
     resources: {{ .Values.argocdInstance.resources.server | toYaml | nindent 6 }}
+    {{- if .Values.argocdInstance.server.execEnabled }}
+    # Web terminal — allows operators to exec into running pods directly from the Argo CD UI.
+    # Enabled via spec.server.extraConfig which the operator propagates to argocd-cm.
+    extraConfig:
+      exec.enabled: "true"
+    {{- end }}
   applicationSet:
     resources: {{ .Values.argocdInstance.resources.applicationSet | toYaml | nindent 6 }}
   repo:

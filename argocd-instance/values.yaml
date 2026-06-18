@@ -13,6 +13,11 @@ argocdInstance:
     # Override platformGroup in common.yaml if your AD group name differs per environment.
     platformGroup: PLATFORM_ADMINS
 
+  server:
+    # Enable the Argo CD web terminal so operators can exec into pods directly from the UI.
+    # Set to false in platform-config/clusters/<type>/common.yaml to disable per environment.
+    execEnabled: true
+
   # Component resource limits — mirrors operator defaults so values are explicit and auditable.
   # Tune per environment in common.yaml (e.g. reduce limits on dev to save cost).
   resources:
