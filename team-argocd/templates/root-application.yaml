@@ -1,0 +1,47 @@
+{{- /*
+  root-application.yaml — seeds the team ArgoCD with a root Application pointing
+  at the team's gitops repo.
+
+  This Application lives in the team's ArgoCD namespace so the team ArgoCD
+  instance reconciles it (not the platform ArgoCD). When the team ArgoCD is
+  ready, it picks up this Application, pulls values.yaml from the team repo,
+  and generates all child Applications declared there.
+
+  From this point the team is fully self-service:
+  - Add a new entry to values.yaml → new Application appears automatically
+  - Remove an entry → Application and its resources are pruned
+  - No platform team action required for any of this
+*/ -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ printf "%s-root" .Values.team.name | quote }}
+  namespace: {{ printf "%s-gitops" .Values.team.name | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    platform/team: {{ .Values.team.name | quote }}
+    platform/managed-by: platform-ops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ .Values.team.name | quote }}
+  source:
+    repoURL: {{ .Values.team.gitopsRepoURL | quote }}
+    targetRevision: {{ .Values.team.targetRevision | default "main" | quote }}
+    # "." means the chart root — Chart.yaml + templates/ + values.yaml
+    path: "."
+    helm:
+      releaseName: {{ .Values.team.name | quote }}
+  destination:
+    # Root Application lives in the team ArgoCD namespace itself
+    namespace: {{ printf "%s-gitops" .Values.team.name | quote }}
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - Validate=true
+      - CreateNamespace=false

@@ -1,0 +1,59 @@
+#
+# values.yaml — team-argocd defaults
+#
+# Deployed once per team by the platform team via platform-apps.
+# Override per team via platform-config/clusters/<type>/<group>/clusterdef.yaml teams[] entry.
+#
+
+team:
+  # Team short name — used to derive namespace, SA names, and AppProject.
+  # Convention: lowercase, no spaces (e.g. my-team, payments, digital).
+  name: my-team
+
+  # Team's gitops repo — the root Application inside the team ArgoCD will point here.
+  # The repo must contain a Helm chart (Chart.yaml + templates/argo-application.yaml)
+  # and a values.yaml listing the team's applications (the my-team-gitops pattern).
+  gitopsRepoURL: https://github.com/nu-j/my-team-gitops.git
+  targetRevision: main
+
+  # Namespace prefix — team ArgoCD AppProject restricts destinations to namespaces
+  # starting with this value. Defaults to team.name if not set.
+  # The bootstrap-project chart should use the same prefix when creating namespaces.
+  namespacePrefix: ""
+
+  # Optional AD group for team ArgoCD UI access (admin role inside the team ArgoCD).
+  # When set, members of this group can log in and manage Applications.
+  adGroupName: ""
+
+# ArgoCD instance resource limits for the team.
+# Intentionally lighter than the platform ArgoCD — teams deploy apps, not infrastructure.
+argocd:
+  resources:
+    server:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    repo:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    controller:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    redis:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi

@@ -1,0 +1,46 @@
+{{- /*
+  namespace.yaml — creates all team namespaces following the naming convention.
+
+  Always creates:
+    <team>-tools               — tooling/CI-CD namespace (Tekton, Nexus, Sonarqube etc.)
+
+  Creates for each system × env:
+    <team>-<system>-<env>      — application namespace
+
+  Every namespace is labelled argocd.argoproj.io/managed-by: <team>-gitops so the
+  OpenShift GitOps operator automatically grants the team ArgoCD SA deploy rights
+  here — no manual RBAC or AppProject update needed when systems are added.
+*/ -}}
+{{- $team := required "team is required — must match the ArgoCD namespace: <team>-gitops" .Values.team }}
+{{- $managedBy := printf "%s-gitops" $team }}
+
+{{- /* ── Tools namespace (always created) ─────────────────────────────── */ -}}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ printf "%s-tools" $team | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    argocd.argoproj.io/managed-by: {{ $managedBy | quote }}
+    platform/team: {{ $team | quote }}
+
+{{- /* ── System × env namespaces ─────────────────────────────────────── */ -}}
+{{- range .Values.systems }}
+{{- $system := .name }}
+{{- range .envs }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ printf "%s-%s-%s" $team $system . | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    argocd.argoproj.io/managed-by: {{ $managedBy | quote }}
+    platform/team: {{ $team | quote }}
+    platform/system: {{ $system | quote }}
+    platform/env: {{ . | quote }}
+{{- end }}
+{{- end }}

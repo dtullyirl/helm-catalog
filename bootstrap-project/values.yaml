@@ -1,0 +1,43 @@
+#
+# values.yaml — bootstrap-project defaults
+#
+# Minimal interface: declare your team, groups, and systems.
+# The chart derives all namespace names from the convention <team>-<system>-<env>.
+# A <team>-tools namespace is always created automatically — no config needed.
+#
+# Namespace naming convention:
+#   <team>-tools              — CI/CD tooling (Tekton pipelines, Nexus, Sonarqube etc.)
+#   <team>-<system>-<env>     — Application namespaces per system and environment
+#
+# Example output for team: my-team, system: pet-battle, envs: [dev, test, stage]:
+#   my-team-tools
+#   my-team-pet-battle-dev
+#   my-team-pet-battle-test
+#   my-team-pet-battle-stage
+#
+# Every namespace is automatically labelled:
+#   argocd.argoproj.io/managed-by: <team>-gitops
+# The OpenShift GitOps operator detects this and grants the team ArgoCD SA
+# deploy rights — no platform team action required for each new namespace.
+#
+
+# team: short name matching the ArgoCD namespace provisioned by the platform (<team>-gitops)
+team: my-team
+
+# bindings: applied identically to every namespace (tools + all system-env combinations)
+bindings:
+  - name: my-team-devs
+    kind: Group
+    role: edit
+  - name: my-team-admins
+    kind: Group
+    role: admin
+
+# systems: each entry generates one namespace per env entry following <team>-<system>-<env>
+# operatorgroup: true — needed when the team wants to install a namespace-scoped operator
+#                       (e.g. a team-specific Kafka or Grafana instance via OLM)
+# operatorgroup: false — team uses cluster-wide operators only (most systems)
+systems:
+  - name: pet-battle
+    envs: [dev, test, stage]
+    operatorgroup: true

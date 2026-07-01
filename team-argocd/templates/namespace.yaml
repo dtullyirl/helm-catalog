@@ -1,0 +1,27 @@
+{{- /*
+  namespace.yaml — creates the team's ArgoCD namespace.
+
+  Two labels are required:
+  1. argocd.argoproj.io/managed-by-cluster-argocd: openshift-gitops
+     Tells the OpenShift GitOps operator (running in openshift-gitops) to watch this
+     namespace for ArgoCD CRs and provision the ArgoCD stack here.
+
+  2. argocd.argoproj.io/managed-by: openshift-gitops
+     Grants the platform ArgoCD SA (openshift-gitops) the RBAC it needs to deploy
+     the resources in this namespace (ArgoCD CR, AppProject, root Application).
+     Without this the platform Application will fail with "forbidden" on sync.
+*/ -}}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ printf "%s-gitops" .Values.team.name | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+  labels:
+    # Allow the GitOps operator to provision an ArgoCD instance here
+    argocd.argoproj.io/managed-by-cluster-argocd: openshift-gitops
+    # Allow the platform ArgoCD to deploy into this namespace
+    argocd.argoproj.io/managed-by: openshift-gitops
+    platform/managed-by: platform-ops
+    platform/team: {{ .Values.team.name | quote }}

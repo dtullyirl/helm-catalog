@@ -1,0 +1,48 @@
+{{- /*
+  rbac.yaml — grants the team ArgoCD application-controller SA permission to
+  create namespaces on the cluster.
+
+  Why only namespace creation?
+  Deploy-into rights for each namespace are handled automatically by the
+  argocd.argoproj.io/managed-by: <team>-gitops label that the bootstrap-project
+  chart stamps on every namespace it creates. The OpenShift GitOps operator
+  detects that label and creates a RoleBinding granting the team SA access.
+  No ClusterRoleBinding for deploy rights is needed or desired.
+
+  The SA name follows the OpenShift GitOps operator naming convention:
+    <namespace>-argocd-application-controller
+  e.g. my-team-gitops-argocd-application-controller
+*/ -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ printf "team-%s-argocd-namespace-manager" .Values.team.name | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    platform/team: {{ .Values.team.name | quote }}
+    platform/managed-by: platform-ops
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ printf "team-%s-argocd-namespace-manager" .Values.team.name | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    platform/team: {{ .Values.team.name | quote }}
+    platform/managed-by: platform-ops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ printf "team-%s-argocd-namespace-manager" .Values.team.name | quote }}
+subjects:
+  - kind: ServiceAccount
+    # OpenShift GitOps operator SA naming convention: <namespace>-argocd-application-controller
+    name: {{ printf "%s-gitops-argocd-application-controller" .Values.team.name | quote }}
+    namespace: {{ printf "%s-gitops" .Values.team.name | quote }}

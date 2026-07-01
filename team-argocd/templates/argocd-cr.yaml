@@ -1,0 +1,71 @@
+{{- /*
+  argocd-cr.yaml — provisions the team ArgoCD instance via the OpenShift GitOps operator.
+
+  The operator watches for ArgoCD CRs in namespaces labelled with
+  argocd.argoproj.io/managed-by-cluster-argocd: openshift-gitops (set in namespace.yaml)
+  and provisions a full ArgoCD stack (server, repo-server, application-controller, redis).
+
+  Resource limits are intentionally smaller than the platform ArgoCD — teams deploy
+  applications, not cluster infrastructure.
+
+  SSA is NOT used here (unlike the platform argocd-instance chart) because this is a
+  fresh namespace with no existing CR to patch. The operator creates the CR from scratch.
+*/ -}}
+---
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  name: {{ printf "%s-gitops" .Values.team.name | quote }}
+  namespace: {{ printf "%s-gitops" .Values.team.name | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    platform/team: {{ .Values.team.name | quote }}
+    platform/managed-by: platform-ops
+spec:
+  rbac:
+    defaultPolicy: ''
+    policy: |
+      g, system:cluster-admins, role:admin
+      {{- if .Values.team.adGroupName }}
+      g, {{ .Values.team.adGroupName }}, role:admin
+      {{- end }}
+    scopes: '[groups]'
+
+  server:
+    # Web terminal enabled — useful for team devs debugging running pods
+    extraConfig:
+      exec.enabled: "true"
+    resources: {{ .Values.argocd.resources.server | toYaml | nindent 6 }}
+
+  repo:
+    resources: {{ .Values.argocd.resources.repo | toYaml | nindent 6 }}
+
+  controller:
+    resources: {{ .Values.argocd.resources.controller | toYaml | nindent 6 }}
+
+  redis:
+    resources: {{ .Values.argocd.resources.redis | toYaml | nindent 6 }}
+
+  # Exclude high-churn resources to prevent constant diff noise
+  resourceExclusions: |
+    - apiGroups:
+      - ""
+      - discovery.k8s.io
+      clusters:
+      - '*'
+      kinds:
+      - Endpoints
+      - EndpointSlice
+    - apiGroups:
+      - coordination.k8s.io
+      clusters:
+      - '*'
+      kinds:
+      - Lease
+    - apiGroups:
+      - apps
+      clusters:
+      - '*'
+      kinds:
+      - ReplicaSet

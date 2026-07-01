@@ -1,0 +1,71 @@
+{{- /*
+  bindings.yaml — creates RoleBindings for every namespace using the global bindings list.
+
+  The same bindings are applied to all namespaces (tools + all system-env combinations).
+  This avoids the need to repeat binding definitions per namespace.
+
+  Subject kinds supported:
+    Group          — AD/IdP group (recommended)
+    User           — individual user (avoid in production; prefer groups)
+    ServiceAccount — cross-namespace SA; supply namespace: field in the binding entry
+*/ -}}
+{{- $team := .Values.team }}
+{{- $bindings := .Values.bindings }}
+
+{{- /* ── Helper: emit RoleBindings for a given namespace ─────────────── */ -}}
+{{- /* Builds the full list: tools namespace + all system-env namespaces  */ -}}
+
+{{- /* Tools namespace bindings */ -}}
+{{- $toolsNs := printf "%s-tools" $team }}
+{{- range $bindings }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ printf "%s-%s-role" .name .role | quote }}
+  namespace: {{ $toolsNs | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .role | quote }}
+subjects:
+  - kind: {{ .kind | quote }}
+    name: {{ .name | quote }}
+    {{- if ne (.kind | lower) "serviceaccount" }}
+    apiGroup: rbac.authorization.k8s.io
+    {{- else }}
+    namespace: {{ .namespace | default $toolsNs | quote }}
+    {{- end }}
+{{- end }}
+
+{{- /* System × env namespace bindings */ -}}
+{{- range $.Values.systems }}
+{{- $system := .name }}
+{{- range .envs }}
+{{- $ns := printf "%s-%s-%s" $team $system . }}
+{{- range $bindings }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ printf "%s-%s-role" .name .role | quote }}
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .role | quote }}
+subjects:
+  - kind: {{ .kind | quote }}
+    name: {{ .name | quote }}
+    {{- if ne (.kind | lower) "serviceaccount" }}
+    apiGroup: rbac.authorization.k8s.io
+    {{- else }}
+    namespace: {{ .namespace | default $ns | quote }}
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

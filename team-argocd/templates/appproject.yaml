@@ -1,0 +1,49 @@
+{{- /*
+  appproject.yaml — restricts team Applications to their own namespaces and repos.
+
+  The AppProject lives in the team's ArgoCD namespace (not openshift-gitops) so it
+  is managed by the team ArgoCD instance, not the platform one.
+
+  Destination namespaces use the team name as a prefix pattern so new namespaces
+  created by bootstrap-project are automatically within scope — no AppProject update
+  needed. The managed-by label provides the actual RBAC enforcement; the AppProject
+  is an additional ArgoCD-level guard.
+
+  sourceRepos: '*' — teams can pull from any Git or Helm repo. Restrict this list
+  in clusterdef.yaml for tighter control in higher environments.
+*/ -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ .Values.team.name | quote }}
+  namespace: {{ printf "%s-gitops" .Values.team.name | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    platform/team: {{ .Values.team.name | quote }}
+    platform/managed-by: platform-ops
+spec:
+  description: {{ printf "Self-service project for the %s team" .Values.team.name | quote }}
+
+  # Allow any source repo — teams are free to pull charts and manifests from anywhere.
+  # Tighten this list in higher environments if needed.
+  sourceRepos:
+    - '*'
+
+  destinations:
+    # Team can only deploy into namespaces matching their prefix
+    - namespace: {{ printf "%s*" (default .Values.team.name .Values.team.namespacePrefix) | quote }}
+      server: https://kubernetes.default.svc
+    # Allow deploying into the team's own ArgoCD namespace (for AppProject, root App etc.)
+    - namespace: {{ printf "%s-gitops" .Values.team.name | quote }}
+      server: https://kubernetes.default.svc
+
+  # Teams cannot create cluster-scoped resources (ClusterRole, CRDs, etc.)
+  # Namespace creation is handled by the team SA ClusterRoleBinding in rbac.yaml.
+  clusterResourceWhitelist: []
+
+  # All namespace-scoped resources are allowed
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

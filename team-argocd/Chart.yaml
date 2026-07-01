@@ -1,0 +1,9 @@
+apiVersion: v2
+name: team-argocd
+description: >
+  Provisions a dedicated ArgoCD instance for a single team on a multi-tenant spoke cluster.
+  Creates the team namespace, RBAC, ArgoCD CR, AppProject, and root Application pointing
+  at the team's gitops repo. Teams are self-service from this point — they manage all
+  further applications by committing to their own repo.
+type: application
+version: 1.0.0

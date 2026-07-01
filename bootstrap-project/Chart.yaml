@@ -1,0 +1,9 @@
+apiVersion: v2
+name: bootstrap-project
+description: >
+  Creates team namespaces with RoleBindings and optional OperatorGroups.
+  Each namespace is automatically labelled with argocd.argoproj.io/managed-by
+  so the OpenShift GitOps operator grants the team ArgoCD SA deploy rights
+  without any platform team involvement.
+type: application
+version: 1.0.0

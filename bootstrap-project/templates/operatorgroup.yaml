@@ -1,0 +1,29 @@
+{{- /*
+  operatorgroup.yaml — creates an OperatorGroup for system namespaces where operatorgroup: true.
+
+  The tools namespace never gets an OperatorGroup — CI/CD tooling uses cluster-wide operators.
+  Application namespaces get one per env when the system sets operatorgroup: true.
+
+  Required only when the team wants to install a namespace-scoped operator instance
+  (e.g. a team-specific Kafka, Grafana). OLM requires exactly one OperatorGroup per
+  namespace to accept a Subscription. Defaults to false.
+*/ -}}
+{{- $team := .Values.team }}
+{{- range .Values.systems }}
+{{- if .operatorgroup }}
+{{- $system := .name }}
+{{- range .envs }}
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: {{ printf "%s-%s-%s-og" $team $system . | quote }}
+  namespace: {{ printf "%s-%s-%s" $team $system . | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  targetNamespaces:
+    - {{ printf "%s-%s-%s" $team $system . | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
