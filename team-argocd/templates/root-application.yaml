@@ -26,7 +26,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: {{ .Values.team.name | quote }}
+  project: default
   source:
     repoURL: {{ .Values.team.gitopsRepoURL | quote }}
     targetRevision: {{ .Values.team.targetRevision | default "main" | quote }}

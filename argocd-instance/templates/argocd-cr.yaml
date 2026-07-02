@@ -37,11 +37,12 @@ spec:
   # Override in platform-config/clusters/<type>/common.yaml to tune per environment.
   server:
     resources: {{ .Values.argocdInstance.resources.server | toYaml | nindent 6 }}
-    {{- if .Values.argocdInstance.server.execEnabled }}
-    # Web terminal — allows operators to exec into running pods directly from the Argo CD UI.
-    # Enabled via spec.server.extraConfig which the operator propagates to argocd-cm.
-    extraConfig:
-      exec.enabled: "true"
+    {{- if .Values.argocdInstance.server.routeEnabled }}
+    route:
+      enabled: true
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: passthrough
     {{- end }}
   applicationSet:
     resources: {{ .Values.argocdInstance.resources.applicationSet | toYaml | nindent 6 }}
@@ -51,6 +52,14 @@ spec:
     resources: {{ .Values.argocdInstance.resources.controller | toYaml | nindent 6 }}
   redis:
     resources: {{ .Values.argocdInstance.resources.redis | toYaml | nindent 6 }}
+
+  # ── Web terminal ───────────────────────────────────────────────────────────
+  # exec.enabled maps to argocd-cm via spec.extraConfig (top-level, not spec.server).
+  # spec.server.extraConfig is not a recognised field — the operator silently drops it.
+  {{- if .Values.argocdInstance.server.execEnabled }}
+  extraConfig:
+    exec.enabled: "true"
+  {{- end }}
 
   # ── Resource exclusions ────────────────────────────────────────────────────
   # Prevents Argo CD from watching high-churn resources (Endpoints, Leases, TaskRuns, etc.)

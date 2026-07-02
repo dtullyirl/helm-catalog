@@ -33,10 +33,12 @@ spec:
     scopes: '[groups]'
 
   server:
-    # Web terminal enabled — useful for team devs debugging running pods
-    extraConfig:
-      exec.enabled: "true"
     resources: {{ .Values.argocd.resources.server | toYaml | nindent 6 }}
+    route:
+      enabled: true
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: passthrough
 
   repo:
     resources: {{ .Values.argocd.resources.repo | toYaml | nindent 6 }}
@@ -46,6 +48,11 @@ spec:
 
   redis:
     resources: {{ .Values.argocd.resources.redis | toYaml | nindent 6 }}
+
+  # exec.enabled maps to argocd-cm via spec.extraConfig (top-level).
+  # spec.server.extraConfig is not a recognised field — the operator silently drops it.
+  extraConfig:
+    exec.enabled: "true"
 
   # Exclude high-churn resources to prevent constant diff noise
   resourceExclusions: |

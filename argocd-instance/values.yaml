@@ -17,6 +17,10 @@ argocdInstance:
     # Enable the Argo CD web terminal so operators can exec into pods directly from the UI.
     # Set to false in platform-config/clusters/<type>/common.yaml to disable per environment.
     execEnabled: true
+    # Enable the OpenShift Route for the ArgoCD UI.
+    # Defaults to true — all spoke clusters should have the UI accessible without port-forwarding.
+    # Set to false in common.yaml to suppress the route (e.g. air-gapped environments).
+    routeEnabled: true
 
   # Component resource limits — mirrors operator defaults so values are explicit and auditable.
   # Tune per environment in common.yaml (e.g. reduce limits on dev to save cost).
