@@ -23,8 +23,16 @@ metadata:
     platform/team: {{ .Values.team.name | quote }}
     platform/managed-by: platform-ops
 spec:
+  # ── OpenShift OAuth ────────────────────────────────────────────────────────
+  # Configures Dex to use OpenShift OAuth so team members log in with their
+  # cluster credentials — no separate ArgoCD user management needed.
+  dex:
+    openShiftOAuth: true
+
   rbac:
     defaultPolicy: ''
+    # system:authenticated grants every logged-in OpenShift user read-only access.
+    # Admins are granted via adGroupName (team's AD/GitHub group) or cluster-admins.
     policy: |
       g, system:cluster-admins, role:admin
       {{- if .Values.team.adGroupName }}
@@ -33,12 +41,18 @@ spec:
     scopes: '[groups]'
 
   server:
+    # insecure: true — ArgoCD server listens on plain HTTP internally.
+    # TLS is terminated at the OpenShift router (edge termination below) using the
+    # cluster's wildcard cert, which avoids browser certificate errors from the
+    # ArgoCD self-signed cert that passthrough termination would expose.
+    insecure: true
     resources: {{ .Values.argocd.resources.server | toYaml | nindent 6 }}
     route:
       enabled: true
       tls:
         insecureEdgeTerminationPolicy: Redirect
-        termination: passthrough
+        # edge: router terminates TLS with its own valid cert, forwards HTTP to ArgoCD
+        termination: edge
 
   repo:
     resources: {{ .Values.argocd.resources.repo | toYaml | nindent 6 }}

@@ -36,13 +36,18 @@ spec:
   # Declared explicitly so they are version-controlled and auditable.
   # Override in platform-config/clusters/<type>/common.yaml to tune per environment.
   server:
+    # insecure: true — ArgoCD server listens on plain HTTP; TLS is terminated at the
+    # OpenShift router (edge termination) using the cluster's wildcard cert.
+    # Avoids browser certificate errors caused by ArgoCD's self-signed cert.
+    insecure: true
     resources: {{ .Values.argocdInstance.resources.server | toYaml | nindent 6 }}
     {{- if .Values.argocdInstance.server.routeEnabled }}
     route:
       enabled: true
       tls:
         insecureEdgeTerminationPolicy: Redirect
-        termination: passthrough
+        # edge: router terminates TLS with its own valid cert, forwards HTTP to ArgoCD
+        termination: edge
     {{- end }}
   applicationSet:
     resources: {{ .Values.argocdInstance.resources.applicationSet | toYaml | nindent 6 }}
