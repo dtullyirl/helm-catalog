@@ -6,8 +6,8 @@ clusterName: ""
 region: eu-west-1
 owner: platform
 
-platformAppsRepoURL: https://github.com/nu-j/platform-apps.git
-platformConfigRepoURL: https://github.com/nu-j/platform-config.git
+platformAppsRepoURL: https://github.com/dtullyirl/platform-apps.git
+platformConfigRepoURL: https://github.com/dtullyirl/platform-config.git
 
 platform:
   version: main
