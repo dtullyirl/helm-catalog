@@ -1,7 +1,7 @@
 org: acme
 
 clusterType: dev
-clusterGroup: payments
+clusterGroup: ocp-spoke
 clusterName: ""
 region: eu-west-1
 owner: platform
@@ -31,6 +31,6 @@ installOpenShiftGitOps: true
 # to already be running — a chicken-and-egg problem at bootstrap time.
 # Pin channel + csv here for auditability; bump csv to upgrade the operator version.
 gitopsOperator:
-  channel: latest
-  csv: openshift-gitops-operator.v1.20.4
+  channel: gitops-1.21
+  csv: openshift-gitops-operator.v1.21.1
   installPlanApproval: Automatic
