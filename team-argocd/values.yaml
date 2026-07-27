@@ -13,7 +13,7 @@ team:
   # Team's gitops repo — the root Application inside the team ArgoCD will point here.
   # The repo must contain a Helm chart (Chart.yaml + templates/argo-application.yaml)
   # and a values.yaml listing the team's applications (the my-team-gitops pattern).
-  gitopsRepoURL: https://github.com/nu-j/my-team-gitops.git
+  gitopsRepoURL: https://github.com/dtullyirl/my-team-gitops.git
   targetRevision: main
 
   # Namespace prefix — team ArgoCD AppProject restricts destinations to namespaces
