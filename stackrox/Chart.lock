@@ -1,0 +1,6 @@
+dependencies:
+- name: central-services
+  repository: https://charts.stackrox.io
+  version: 400.6.0
+digest: sha256:b18e6ced32ef6741183af0ef889f1d208458068bde476ea78d657b7f5b638a2e
+generated: "2026-07-27T21:44:43.911975704+01:00"
