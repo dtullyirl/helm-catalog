@@ -2,6 +2,8 @@ apiVersion: config.openshift.io/v1
 kind: ClusterVersion
 metadata:
   name: version
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
 spec:
   channel: stable-4.22
   desiredUpdate:
